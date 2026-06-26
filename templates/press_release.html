@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{TITLE}}</title>
+  <link rel="stylesheet" href="../static/style.css" />
+</head>
+
+<body>
+  <div class="top-line"></div>
+
+  <header class="site-header">
+    <div class="logo">Mphasis<br><span>News</span></div>
+
+    <nav class="header-actions">
+      <button class="join-btn">Join our team</button>
+      <span class="icon">⌕</span>
+      <span class="icon">☰</span>
+    </nav>
+  </header>
+
+  <section class="breadcrumbs">
+    <span>News</span>
+    <span>›</span>
+    <span>Press Releases</span>
+    <span>›</span>
+    <span>{{YEAR}}</span>
+    <span>›</span>
+    <span>{{TITLE}}</span>
+  </section>
+
+  <section class="hero-background">
+    <div class="hero-card">
+      <p class="eyebrow">MPHASIS NEWS PRESS RELEASE</p>
+
+      <h1>{{TITLE}}</h1>
+
+      <div class="subtitles">
+        <p>{{SUBTITLE_1}}</p>
+        <p>{{SUBTITLE_2}}</p>
+      </div>
+
+      <p class="meta">{{LOCATION}} <span>|</span> {{DATE}}</p>
+    </div>
+  </section>
+
+  <main class="article-body">
+    {{BODY}}
+  </main>
+
+  <section class="signup-section">
+    <div>
+      <h2>Sign up for Mphasis news and alerts</h2>
+    </div>
+
+    <div>
+      <p>
+        Sign up for updates on the ways we are using our expertise, data,
+        resources and scale to open new pathways to economic opportunity
+        and drive inclusive growth in communities around the world.
+      </p>
+
+      <button class="signup-btn">Sign up</button>
+    </div>
+  </section>
+
+  <section class="info-section">
+    <div class="info-card">
+      <h2>Contact Information</h2>
+      <hr />
+
+      <div class="info-grid">
+        <div>
+          <h3>For help as a customer or client:</h3>
+          <ul>
+            <li>For help with your <a href="#">Mphasis account</a></li>
+            <li>For <a href="#">customer complaints and feedback</a></li>
+            <li>For help with <a href="#">digital banking accounts</a></li>
+            <li>For questions on <a href="#">career opportunities</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>For shareholder and fixed income assistance, please contact</h3>
+          <p>
+            Investor Relations<br />
+            Mphasis Limited<br />
+            {{IR_ADDRESS_LINE_1}}<br />
+            {{IR_ADDRESS_LINE_2}}<br />
+            {{IR_PHONE}}<br />
+            <a href="#">{{IR_EMAIL}}</a>
+          </p>
+
+          <h3>For ESG-related inquiries, please contact</h3>
+          <p><a href="#">{{ESG_EMAIL}}</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h2>Stock Trade Information</h2>
+      <hr />
+
+      <h3>Stock Transfer Agent:</h3>
+      <p>{{TRANSFER_AGENT}}</p>
+
+      <h3>By Regular Mail</h3>
+      <p>
+        {{STREET_ADDRESS}}<br />
+        {{CITY_STATE_ZIP}}
+      </p>
+
+      <h3>By overnight delivery:</h3>
+      <p>
+        {{OVERNIGHT_ADDRESS}}<br />
+        {{OVERNIGHT_CITY_STATE_ZIP}}<br />
+        {{OVERNIGHT_PHONE}}<br />
+        <a href="#">{{TRANSFER_AGENT_WEBSITE}}</a>
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <div class="footer-logo">Mphasis</div>
+
+      <div class="socials">
+        <span>in</span>
+        <span>f</span>
+        <span>◎</span>
+        <span>▶</span>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <div>
+        <h3>About Mphasis</h3>
+        <p>How we do business</p>
+        <p>Leadership</p>
+        <p>Careers</p>
+        <p>Newsroom</p>
+        <p>Investors</p>
+        <p>Sustainability</p>
+      </div>
+
+      <div>
+        <h3>Industries</h3>
+        <p>Banking & Financial Services</p>
+        <p>Insurance</p>
+        <p>Healthcare & Life Sciences</p>
+        <p>Retail & CPG</p>
+        <p>Technology</p>
+      </div>
+
+      <div>
+        <h3>Insights</h3>
+        <p>Perspectives</p>
+        <p>Research</p>
+        <p>Reports</p>
+        <p>Blogs</p>
+        <p>Case Studies</p>
+      </div>
+
+      <div>
+        <h3>Newsroom</h3>
+        <p>Press Releases</p>
+        <p>Media Contacts</p>
+        <p>Events</p>
+        <p>In the News</p>
+      </div>
+
+      <div>
+        <h3>Related Sites</h3>
+        <p>Mphasis.com</p>
+        <p>Careers</p>
+        <p>Partner Portal</p>
+        <p>Investor Relations</p>
+      </div>
+    </div>
+
+    <div class="legal">
+      <p>Privacy Notice | Terms of Use | Cookies | Accessibility | Global Financial Crimes Compliance</p>
+      <p>©{{YEAR}} Mphasis Limited. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
