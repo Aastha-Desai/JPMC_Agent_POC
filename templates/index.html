@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Press Release Workflow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        input, button {
+            margin-top: 16px;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        button {
+            cursor: pointer;
+            background: #111;
+            color: white;
+            border: none;
+            border-radius: 6px;
+        }
+
+        .box {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background: #f8f8f8;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 12px;
+            color: #005eb8;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>AI Press Release Workflow</h1>
+
+    <form action="/generate" method="POST" enctype="multipart/form-data">
+        <h2>Create Draft</h2>
+
+        <label>Upload Word Document:</label><br>
+        <input type="file" name="word_doc" accept=".docx"><br>
+
+        <label>Optional Prompt / Instructions:</label><br>
+        <textarea name="prompt" placeholder="Example: Create a press release about Mphasis launching a new AI platform..."></textarea><br>
+
+        <button type="submit">Generate Draft</button>
+    </form>
+
+    <form action="/publish" method="POST">
+        <h2>Publish Draft</h2>
+        <button type="submit">Publish Current Draft</button>
+    </form>
+
+    {% if message %}
+    <div class="box">
+        <h2>Status</h2>
+        <p>{{ message }}</p>
+
+        {% if draft_link %}
+            <a href="{{ draft_link }}" target="_blank">Open Draft Preview</a>
+        {% endif %}
+
+        {% if published_link %}
+            <a href="{{ published_link }}" target="_blank">Open Published Page</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>
