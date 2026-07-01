@@ -1,4 +1,4 @@
-from mcp.aem.stub import create_draft_page
+from mcp.aem_stub import create_draft_page
 from mcp.request_store import create_request_record
 
 CSS_PATH = "static/style.css"
