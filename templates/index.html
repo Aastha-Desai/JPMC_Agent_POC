@@ -2,84 +2,148 @@
 <html>
 <head>
     <title>AI Press Release Workflow</title>
+
     <style>
-        body {
+        body{
             font-family: Arial, sans-serif;
             max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
+            margin:40px auto;
+            padding:20px;
+            background:#fafafa;
         }
 
-        textarea {
-            width: 100%;
-            height: 160px;
-            padding: 12px;
-            font-size: 16px;
+        textarea{
+            width:100%;
+            height:160px;
+            padding:12px;
+            font-size:16px;
         }
 
-        input, button {
-            margin-top: 16px;
-            padding: 12px;
-            font-size: 16px;
+        input,
+        button{
+            margin-top:16px;
+            padding:12px;
+            font-size:16px;
         }
 
-        button {
-            cursor: pointer;
-            background: #111;
-            color: white;
-            border: none;
-            border-radius: 6px;
+        button{
+            cursor:pointer;
+            background:#111;
+            color:white;
+            border:none;
+            border-radius:6px;
         }
 
-        .box {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            background: #f8f8f8;
+        .box{
+            margin-top:30px;
+            padding:20px;
+            border:1px solid #ddd;
+            background:white;
+            border-radius:8px;
         }
 
-        a {
-            display: inline-block;
-            margin-top: 12px;
-            color: #005eb8;
-            font-weight: bold;
+        a{
+            display:inline-block;
+            margin-top:12px;
+            color:#005eb8;
+            font-weight:bold;
+        }
+
+        form.inline{
+            display:inline-block;
+            margin-right:10px;
+        }
+
+        .status{
+            font-size:18px;
+            margin-bottom:8px;
         }
     </style>
 </head>
 
 <body>
-    <h1>AI Press Release Workflow</h1>
 
-    <form action="/generate" method="POST" enctype="multipart/form-data">
-        <h2>Create Draft</h2>
+<h1>AI Press Release Workflow</h1>
 
-        <label>Upload Word Document:</label><br>
-        <input type="file" name="word_doc" accept=".docx"><br>
+<form action="/generate" method="POST" enctype="multipart/form-data">
+    <h2>Create Draft</h2>
 
-        <label>Optional Prompt / Instructions:</label><br>
-        <textarea name="prompt" placeholder="Example: Create a press release about Mphasis launching a new AI platform..."></textarea><br>
+    <label>Upload Word Document</label><br>
+    <input type="file" name="word_doc" accept=".docx"><br>
 
-        <button type="submit">Generate Draft</button>
+    <label>Optional Prompt / Instructions</label><br>
+    <textarea name="prompt" placeholder="Example: Create a press release about Mphasis launching a new AI platform..."></textarea><br>
+
+    <button type="submit">Generate Draft</button>
+</form>
+
+{% if message %}
+<div class="box">
+    <h2>Status</h2>
+    <p>{{ message }}</p>
+
+    {% if draft_link %}
+        <a href="{{ draft_link }}" target="_blank">Open Draft Preview</a>
+    {% endif %}
+
+    {% if published_link %}
+        <br>
+        <a href="{{ published_link }}" target="_blank">Open Published Page</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if request_record %}
+<div class="box">
+    <h2>Current Request Status</h2>
+
+    <p class="status"><strong>Request ID:</strong> {{ request_record.request_id }}</p>
+    <p class="status"><strong>Title:</strong> {{ request_record.title }}</p>
+    <p class="status"><strong>Status:</strong> {{ request_record.status }}</p>
+    <p class="status"><strong>Review Stage:</strong> {{ request_record.review_stage }}</p>
+
+    {% if request_record.review_stage == "REQUESTER_REVIEW" %}
+    <form class="inline" action="/requester-approve" method="POST">
+        <button type="submit">Requester Approve</button>
     </form>
+    {% endif %}
 
-    <form action="/publish" method="POST">
-        <h2>Publish Draft</h2>
+    {% if request_record.review_stage == "PEER_REVIEW" %}
+    <form class="inline" action="/peer-approve" method="POST">
+        <button type="submit">Peer Approve</button>
+    </form>
+    {% endif %}
+
+    {% if request_record.review_stage == "MANAGER_REVIEW" %}
+    <form class="inline" action="/manager-approve" method="POST">
+        <button type="submit">Manager Approve</button>
+    </form>
+    {% endif %}
+
+    {% if request_record.status == "READY_FOR_PUBLISH" %}
+    <form class="inline" action="/publish" method="POST">
         <button type="submit">Publish Current Draft</button>
     </form>
-
-    {% if message %}
-    <div class="box">
-        <h2>Status</h2>
-        <p>{{ message }}</p>
-
-        {% if draft_link %}
-            <a href="{{ draft_link }}" target="_blank">Open Draft Preview</a>
-        {% endif %}
-
-        {% if published_link %}
-            <a href="{{ published_link }}" target="_blank">Open Published Page</a>
-        {% endif %}
-    </div>
     {% endif %}
+</div>
+{% endif %}
+
+{% if report %}
+<div class="box">
+    <h2>Workflow Report</h2>
+
+    <p><strong>Total Requests:</strong> {{ report.total_requests }}</p>
+    <p><strong>Draft Created:</strong> {{ report.draft_created }}</p>
+    <p><strong>Requester Review:</strong> {{ report.requester_review }}</p>
+    <p><strong>Peer Review:</strong> {{ report.peer_review }}</p>
+    <p><strong>Manager Review:</strong> {{ report.manager_review }}</p>
+    <p><strong>Published:</strong> {{ report.published }}</p>
+</div>
+{% endif %}
+
+<form action="/report" method="GET">
+    <button type="submit">View Workflow Report</button>
+</form>
+
 </body>
 </html>

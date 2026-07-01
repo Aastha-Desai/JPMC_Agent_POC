@@ -6,6 +6,7 @@ import shutil
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from groq_client import call_groq, load_prompt
+from mcp.publish_server import publish_press_release_page
 
 PROMPT_PATH = "prompts/agent3_publish_prompt.txt"
 
@@ -83,15 +84,19 @@ def publish_press_release(user_input: str) -> dict:
 
     if decision.get("publish_decision") != "APPROVE_PUBLISH":
         return decision
+    mcp_result = publish_press_release_page()
 
-    os.makedirs(PUBLISHED_FOLDER, exist_ok=True)
-
-    shutil.copyfile(DRAFT_HTML, PUBLISHED_HTML)
-    shutil.copyfile(DRAFT_CSS, PUBLISHED_CSS)
-
-    decision["published_html"] = PUBLISHED_HTML
-    decision["published_css"] = PUBLISHED_CSS
-
+    if not mcp_result.get("success"):
+        return{
+            "publish_decision": "DO_NOT_PUBLISH",
+            "is_ready": False,
+            "reason": mcp_result.get("reason"),
+            "required_action": "none"
+        }
+    
+    decision["published_html"] = mcp_result["published_url"]
+    decision["mcp_result"] = mcp_result
+    
     return decision
 
 

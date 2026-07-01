@@ -3,6 +3,7 @@ import sys
 import json
 import shutil
 import re
+from mcp.author_server import create_press_release_draft
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,7 +30,13 @@ def clean_json_response(raw_response: str) -> str:
     if text.endswith("```"):
         text = text[:-3].strip()
 
-    return text
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start != -1 and end != -1:
+        text = text[start:end + 1]
+
+    return text.strip()
 
 
 def generate_press_release_content(user_input: str) -> dict:
@@ -76,19 +83,17 @@ def author_press_release(user_input: str) -> dict:
     content = generate_press_release_content(user_input)
     final_html = fill_template(content)
 
-    os.makedirs(DRAFT_FOLDER, exist_ok=True)
+    mcp_result = create_press_release_draft(
+        title= content.get("title", ""),
+        html_content = final_html
+    )
 
-    with open(DRAFT_HTML_PATH, "w", encoding="utf-8") as file:
-        file.write(final_html)
-
-    shutil.copyfile(CSS_PATH, DRAFT_CSS_PATH)
-
-    return {
-        "status": "success",
-        "message": "Draft press release created with HTML and CSS.",
-        "draft_path": DRAFT_HTML_PATH,
-        "css_path": DRAFT_CSS_PATH,
-        "title": content.get("title", "")
+    return{
+        "status" : "success",
+        "message": "Draft press release created through Author MCP Server.",
+        "draft_path": mcp_result["draft_url"],
+        "title": content.get("title", ""),
+        "mcp_result": mcp_result
     }
 
 
