@@ -2,7 +2,6 @@ import os
 from flask import Flask, render_template, request, send_from_directory
 from docx import Document
 from mcp.request_store import advance_latest_request, get_latest_request, get_report
-
 from agents.agent1_router import handle_request
 
 app = Flask(__name__)
@@ -64,6 +63,17 @@ Word document content:
 
 @app.route("/publish", methods=["POST"])
 def publish():
+    latest_request = get_latest_request()
+
+    if not latest_request or latest_request.get("status") != "READY_FOR_PUBLISH":
+        return render_template(
+            "index.html",
+            message="Publishing blocked. Manager approval is required before publishing.",
+            request_record=latest_request,
+            draft_link="/draft/press_release.html",
+            report=get_report()
+        )
+
     publish_input = "Publish the approved current draft press release."
 
     workflow_result = handle_request(publish_input)
@@ -72,9 +82,9 @@ def publish():
         "index.html",
         message=workflow_result.get("status"),
         result=workflow_result,
-        published_link=workflow_result.get("published_link")
+        published_link=workflow_result.get("published_link"),
         request_record=get_latest_request(),
-        report = get_report()
+        report=get_report()
     )
 
 
@@ -93,11 +103,12 @@ def requester_approve():
 
     return render_template(
         "index.html",
-        message = "Requester approved draft. Sent to peer review.",
-        request_record = updated_request,
-        draft_link = "/draft/press_release.html",
-        report = get_report()
+        message="Requester approved. Sent to peer review.",
+        request_record=updated_request,
+        draft_link="/draft/press_release.html",
+        report=get_report()
     )
+
 
 @app.route("/peer-approve", methods=["POST"])
 def peer_approve():
@@ -105,22 +116,26 @@ def peer_approve():
 
     return render_template(
         "index.html",
-        message = "Peer aproved draft. Sent to manager approval.",
-        request_record = updated_request,
-        draft_link = "/draft/press_release.html",
-        report = get_report()
+        message="Peer approved. Sent to manager review.",
+        request_record=updated_request,
+        draft_link="/draft/press_release.html",
+        report=get_report()
     )
+
 
 @app.route("/manager-approve", methods=["POST"])
 def manager_approve():
-    updated_request = advance_latest_request("READY_FOR_PUBLISH", status="READY_FOR_PUBLISH")
+    updated_request = advance_latest_request(
+        "READY_FOR_PUBLISH",
+        status="READY_FOR_PUBLISH"
+    )
 
     return render_template(
         "index.html",
-        message = "Manager approvved draft. Ready for publishing.",
-        request_record = updated_request,
-        draft_link = "/draft/press_release.html",
-        report = get_report()
+        message="Manager approved. Ready for publishing.",
+        request_record=updated_request,
+        draft_link="/draft/press_release.html",
+        report=get_report()
     )
 
 @app.route("/report", methods=["GET"])
