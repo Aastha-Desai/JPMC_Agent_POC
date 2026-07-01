@@ -221,5 +221,4 @@ The prototype uses Groq-hosted LLMs for:
 - Intent detection
 - Content generation
 - Publish validation
-
 ---
