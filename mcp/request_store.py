@@ -97,16 +97,17 @@ def get_report():
 
     return report
 
-def advance_latest_request(review_stage,status=None):
+def advance_latest_request(review_stage, status=None):
     latest_request = get_latest_request()
 
     if not latest_request:
         return None
+
     if status is None:
         status = latest_request["status"]
-    
+
     return update_request_status(
-        request_id = latest_request["request_id"],
-        status = status,
-        review_stage = review_stage
+        request_id=latest_request["request_id"],
+        status=status,
+        review_stage=review_stage
     )
