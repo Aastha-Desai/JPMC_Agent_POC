@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, send_from_directory
 from docx import Document
+from mcp.request_store import advance_latest_request, get_latest_request, get_report
 
 from agents.agent1_router import handle_request
 
@@ -55,7 +56,9 @@ Word document content:
         "index.html",
         message=workflow_result.get("status"),
         result=workflow_result,
-        draft_link=workflow_result.get("draft_link")
+        draft_link=workflow_result.get("draft_link"),
+        request_record=workflow_result.get("agent_2", {}).get("mcp_result", {}).get("request"),
+        report = get_report()
     )
 
 
@@ -70,6 +73,8 @@ def publish():
         message=workflow_result.get("status"),
         result=workflow_result,
         published_link=workflow_result.get("published_link")
+        request_record=get_latest_request(),
+        report = get_report()
     )
 
 
@@ -82,6 +87,50 @@ def draft_file(filename):
 def published_file(filename):
     return send_from_directory(PUBLISHED_FOLDER, filename)
 
+@app.route("/requester-approve", methods=["POST"])
+def requester_approve():
+    updated_request = advance_latest_request("PEER_REVIEW")
+
+    return render_template(
+        "index.html",
+        message = "Requester approved draft. Sent to peer review.",
+        request_record = updated_request,
+        draft_link = "/draft/press_release.html",
+        report = get_report()
+    )
+
+@app.route("/peer-approve", methods=["POST"])
+def peer_approve():
+    updated_request = advance_latest_request("MANAGER_REVIEW")
+
+    return render_template(
+        "index.html",
+        message = "Peer aproved draft. Sent to manager approval.",
+        request_record = updated_request,
+        draft_link = "/draft/press_release.html",
+        report = get_report()
+    )
+
+@app.route("/manager-approve", methods=["POST"])
+def manager_approve():
+    updated_request = advance_latest_request("READY_FOR_PUBLISH", status="READY_FOR_PUBLISH")
+
+    return render_template(
+        "index.html",
+        message = "Manager approvved draft. Ready for publishing.",
+        request_record = updated_request,
+        draft_link = "/draft/press_release.html",
+        report = get_report()
+    )
+
+@app.route("/report", methods=["GET"])
+def report():
+    return render_template(
+        "index.html",
+        message = "Workflow report loaded.",
+        request_record = get_latest_request(),
+        report = get_report()
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
