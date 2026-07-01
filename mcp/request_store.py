@@ -59,38 +59,40 @@ def update_request_status(request_id, status, review_stage=None, published_path=
             
             save_requests(requests)
             return record
+
+    return None
+
+
+def get_latest_request():
+    requests = load_requests()
+
+    if not requests:
         return None
-    
-    def get_latest_request():
-        requests = load_requests()
+    return requests[-1]
 
-        if not requests:
-            return None
-        return requests[-1]
-    
-    def get_report():
-        requests = load_requests()
 
-        report = {
-            "total_requests": len(requests),
-            "draft_created": 0,
-            "requester_review": 0,
-            "peer_review":0,
-            "manager_review": 0,
-            "published": 0
-        }
+def get_report():
+    requests = load_requests()
 
-        for record in requests:
-            if record["status"] == "DRAFT_CREATED":
-                report["draft_created"] += 1
-            if record["review_stage"] == "REQUESTER_REVIEW":
-                report["requester_review"] += 1
-            if record["review_stage"] == "PEER_REVIEW":
-                report["peer_review"] += 1
-            if record["review_stage"] == "MANAGER_REVIEW":
-                report["manager_review"] += 1
-            if record["status"] == "PUBLISHED":
-                report["published"] += 1
-        
-        return report
-    
+    report = {
+        "total_requests": len(requests),
+        "draft_created": 0,
+        "requester_review": 0,
+        "peer_review": 0,
+        "manager_review": 0,
+        "published": 0
+    }
+
+    for record in requests:
+        if record["status"] == "DRAFT_CREATED":
+            report["draft_created"] += 1
+        if record["review_stage"] == "REQUESTER_REVIEW":
+            report["requester_review"] += 1
+        if record["review_stage"] == "PEER_REVIEW":
+            report["peer_review"] += 1
+        if record["review_stage"] == "MANAGER_REVIEW":
+            report["manager_review"] += 1
+        if record["status"] == "PUBLISHED":
+            report["published"] += 1
+
+    return report

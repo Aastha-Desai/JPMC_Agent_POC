@@ -30,7 +30,13 @@ def clean_json_response(raw_response: str) -> str:
     if text.endswith("```"):
         text = text[:-3].strip()
 
-    return text
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start != -1 and end != -1:
+        text = text[start:end + 1]
+
+    return text.strip()
 
 
 def generate_press_release_content(user_input: str) -> dict:
