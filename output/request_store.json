@@ -1,0 +1,52 @@
+[
+  {
+    "request_id": "REQ-0001",
+    "title": "JPMorganChase Launches Innovative Document Automation Platform",
+    "status": "DRAFT_CREATED",
+    "draft_path": "output/draft/press_release.html",
+    "published_path": null,
+    "created_at": "2026-07-06T08:53:35.738518",
+    "updated_at": "2026-07-06T08:53:35.738540",
+    "review_stage": "REQUESTER_REVIEW"
+  },
+  {
+    "request_id": "REQ-0002",
+    "title": "JPMorganChase Launches AI-Powered Document Automation Platform",
+    "status": "DRAFT_CREATED",
+    "draft_path": "output/draft/press_release.html",
+    "published_path": null,
+    "created_at": "2026-07-06T08:54:08.505588",
+    "updated_at": "2026-07-06T08:54:08.505617",
+    "review_stage": "REQUESTER_REVIEW"
+  },
+  {
+    "request_id": "REQ-0003",
+    "title": "JPMorganChase Introduces Innovative Document Automation Platform",
+    "status": "DRAFT_CREATED",
+    "draft_path": "output/draft/press_release.html",
+    "published_path": null,
+    "created_at": "2026-07-06T08:56:00.845160",
+    "updated_at": "2026-07-06T08:56:00.845175",
+    "review_stage": "REQUESTER_REVIEW"
+  },
+  {
+    "request_id": "REQ-0004",
+    "title": "JPMorganChase Introduces Innovative Document Automation Platform",
+    "status": "DRAFT_CREATED",
+    "draft_path": "output/draft/press_release.html",
+    "published_path": null,
+    "created_at": "2026-07-06T08:56:03.941323",
+    "updated_at": "2026-07-06T08:56:03.941332",
+    "review_stage": "REQUESTER_REVIEW"
+  },
+  {
+    "request_id": "REQ-0005",
+    "title": "JPMorganChase Introduces Innovative Document Automation Platform",
+    "status": "PUBLISHED",
+    "draft_path": "output/draft/press_release.html",
+    "published_path": "output/published/press_release.html",
+    "created_at": "2026-07-06T09:01:22.914030",
+    "updated_at": "2026-07-06T09:08:21.557333",
+    "review_stage": "PUBLISHED"
+  }
+]
