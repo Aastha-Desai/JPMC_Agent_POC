@@ -1,0 +1,58 @@
+.header {
+  height: 70px;
+  background: #0067b1;
+  color:white;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:0 40px;
+}
+
+
+.header-left {
+  display:flex;
+  align-items:center;
+  gap:35px;
+}
+
+
+.logo {
+  font-size:24px;
+  font-weight:bold;
+}
+
+
+.nav {
+  display:flex;
+  gap:20px;
+}
+
+
+.nav button {
+
+  background:none;
+  border:none;
+
+  color:white;
+
+  font-size:14px;
+
+  cursor:pointer;
+
+}
+
+
+.nav button.active {
+  font-weight:bold;
+}
+
+
+.header-title {
+
+  font-size:14px;
+
+  opacity:.9;
+
+}
