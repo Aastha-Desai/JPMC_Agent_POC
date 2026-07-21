@@ -1,19 +1,34 @@
 function Header() {
   return (
     <header className="header">
-      <div className="header-left">
-        <h2>JPMorganChase</h2>
 
-        <nav>
-          <button>Dashboard</button>
-          <button>Profile</button>
-          <button>Settings</button>
+      <div className="header-left">
+
+        <div className="logo">
+          JPMorganChase
+        </div>
+
+        <nav className="nav">
+          <button className="active">
+            Dashboard
+          </button>
+
+          <button>
+            Profile
+          </button>
+
+          <button>
+            Settings
+          </button>
         </nav>
+
       </div>
 
-      <div className="header-right">
+
+      <div className="header-title">
         AEM Press Release Manager
       </div>
+
     </header>
   );
 }
