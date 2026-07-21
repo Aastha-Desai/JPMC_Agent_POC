@@ -1,5 +1,7 @@
 @import "./styles/header.css";
 @import "./styles/dashboard.css";
+@import "./styles/filters.css";
+@import "./styles/card.css";
 * {
   box-sizing: border-box;
 }

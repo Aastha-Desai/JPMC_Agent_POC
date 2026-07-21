@@ -10,7 +10,7 @@
 
 .dashboard-hero{
   display:grid;
-  grid-template-columns: minmax(0,1fr) auto;
+  grid-template-columns: minmax(500px,1fr) 510px;
   align-items:center;
   gap:42px;
 }
@@ -42,7 +42,7 @@
 }
 
 .start-release-button{
-  min-width: 255px;
+  width:100%;
   min-height: 48px;
   padding: 0 22px;
   display: inline-flex;
