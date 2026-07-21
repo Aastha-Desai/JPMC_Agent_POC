@@ -1,4 +1,4 @@
-function SearchBar({searchQurey, onSearchChange}){
+function SearchBar({searchQuery, onSearchChange}){
     return(
         <div className = "search-bar">
             <label htmlFor="dashboard-search" className="sr-only">

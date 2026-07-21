@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 
 function Dashboard() {
-  const [searchQurey, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   
   function handleStartNewPressRelease(){
     console.log("Start New Press Release clicked");
