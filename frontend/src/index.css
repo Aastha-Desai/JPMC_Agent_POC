@@ -2,6 +2,7 @@
 @import "./styles/dashboard.css";
 @import "./styles/filters.css";
 @import "./styles/card.css";
+@import "./styles/newRelease.css";
 * {
   box-sizing: border-box;
 }
