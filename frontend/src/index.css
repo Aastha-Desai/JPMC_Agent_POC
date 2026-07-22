@@ -3,6 +3,7 @@
 @import "./styles/filters.css";
 @import "./styles/card.css";
 @import "./styles/newRelease.css";
+@import "./styles/processing.css";
 * {
   box-sizing: border-box;
 }
