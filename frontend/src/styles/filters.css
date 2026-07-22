@@ -1,0 +1,149 @@
+.dashboard-controls {
+  margin-top: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 34px;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+}
+
+.tabs button {
+  position: relative;
+  padding: 13px 14px 15px;
+  border: none;
+  background: transparent;
+  color: #4d4d4d;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.tabs button:hover {
+  color: #0872c9;
+}
+
+.tabs button.active {
+  color: #0872c9;
+}
+
+.tabs button.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 4px;
+  background: #0872c9;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.filter-bar__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.filter-select {
+  position: relative;
+  min-width: 180px;
+}
+
+.filter-select select {
+  width: 100%;
+  height: 46px;
+  padding: 0 42px 0 16px;
+
+  border: 1px solid #c7c7c7;
+  border-radius: 0;
+
+  background: white;
+  color: #555;
+
+  font-size: 14px;
+
+  cursor: pointer;
+
+  outline: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.filter-select select:focus {
+  border-color: #0872c9;
+  box-shadow: 0 0 0 2px rgba(8,114,201,.15);
+}
+
+.filter-select__arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  pointer-events: none;
+
+  color: #0872c9;
+  font-size: 18px;
+}
+
+.tab-placeholder {
+  margin-top: 40px;
+  padding: 50px;
+
+  border: 1px dashed #ccc;
+
+  background: #fafafa;
+
+  text-align: center;
+}
+
+.tab-placeholder h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 1200px) {
+
+  .dashboard-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    gap: 16px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+}
