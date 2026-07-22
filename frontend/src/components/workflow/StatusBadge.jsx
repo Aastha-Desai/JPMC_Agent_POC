@@ -1,23 +1,21 @@
-function StatusBadge({status}){
-    const normalizedStatus = status.toLowerCase();
+function StatusBadge({ status }) {
+  const normalizedStatus = status.toLowerCase();
 
-    const statusLabels = {
-        pending: "Pending",
-        processing: "Processing",
-        completed:"Completed",
-        waiting: "Waiting for Approval",
-        blocked: "Blocked",
-    };
+  const statusLabels = {
+    pending: "Pending",
+    processing: "Processing",
+    completed: "Completed",
+    waiting: "Waiting for Approval",
+    blocked: "Blocked",
+  };
 
-    const label = statusLabels[normalziedStatus] || status;
+  const label = statusLabels[normalizedStatus] || status;
 
-    return (
-        <span 
-            className={`status-badge status-badge--${normalizedStatus}`}
-        >
-            {label}
-        </span>
-    );
+  return (
+    <span className={`status-badge status-badge--${normalizedStatus}`}>
+      {label}
+    </span>
+  );
 }
 
 export default StatusBadge;
