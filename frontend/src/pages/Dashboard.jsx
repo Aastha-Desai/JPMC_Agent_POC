@@ -5,8 +5,10 @@ import Tabs from "../components/Tabs";
 import FilterBar from "../components/FilterBar";
 import CardGrid from "../components/CardGrid";
 import { mockCases } from "../data/mockCases";
+import {useNavigate} from "react-router";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("queue");
   const [selectedLocale, setSelectedLocale] = useState("all");
@@ -63,7 +65,7 @@ function Dashboard() {
   );
 
   function handleStartNewPressRelease() {
-    console.log("Start New Press Release clicked");
+    navigate("/new");
   }
 
   function handleCardClick(caseItem) {
