@@ -421,3 +421,145 @@
         flex-direction:column;
     }
 }
+.workflow-summary {
+  margin: -8px 0 25px;
+  padding-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  border-bottom: 1px solid #e2e2e2;
+  color: #717171;
+  font-size: 11px;
+}
+
+.workflow-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.workflow-summary strong {
+  color: #3f3f3f;
+  font-size: 13px;
+}
+
+.processing-step {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 15px;
+  align-items: stretch;
+}
+
+.processing-step__marker-column {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.processing-step__marker {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #b8bec4;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #737a80;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.processing-step__line {
+  width: 2px;
+  min-height: 76px;
+  flex: 1;
+  background: #d8dbde;
+}
+
+.processing-step__content {
+  padding-bottom: 30px;
+}
+
+.processing-step__heading {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.source-preview-placeholder__details {
+  margin-top: 24px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #d9e0e5;
+  background: #f7f9fa;
+}
+
+.source-preview-placeholder__details span {
+  display: block;
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.source-preview-placeholder__details strong {
+  margin-right: 5px;
+  color: #303030;
+}
+
+.processing-activity {
+  margin-top: 8px;
+  padding: 18px;
+  border: 1px solid #dfe3e6;
+  background: #fafbfc;
+}
+
+.processing-activity__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.processing-activity__list {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.processing-activity__item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.processing-activity__marker {
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #15956d;
+}
+
+.processing-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.return-dashboard-button {
+  min-height: 42px;
+  padding: 0 19px;
+  border: 1px solid #0872c9;
+  background: #0872c9;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
