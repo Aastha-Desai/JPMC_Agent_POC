@@ -1,469 +1,471 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import Header from "../components/Header";
-import WorkflowTimeline from "../components/workflow/WorkflowTimeline";
+import {
+  buildBackendUrl,
+  getLatestPressReleaseRequest,
+} from "../api/pressReleaseApi";
 
-const INITIAL_STEPS = [
-  {
-    id: "validation",
-    title: "AI Validation",
-    description:
-      "The uploaded request is being checked for required fields, content quality, and compliance issues.",
-    status: "processing",
-  },
-  {
-    id: "authoring",
-    title: "AEM Authoring",
-    description:
-      "The press release draft and supporting page content will be created.",
-    status: "pending",
-  },
-  {
-    id: "approval",
-    title: "Approval",
-    description:
-      "The generated draft will wait for review by an authorized approver.",
-    status: "pending",
-  },
-  {
-    id: "publish",
-    title: "Publish",
-    description:
-      "The approved press release will be published to the live website.",
-    status: "pending",
-  },
-];
+function normalizeStage(requestRecord) {
+  return (
+    requestRecord?.review_stage ||
+    requestRecord?.status ||
+    "REQUESTER_REVIEW"
+  ).toUpperCase();
+}
+
+function buildWorkflowSections(requestRecord, apiResult) {
+  const stage = normalizeStage(requestRecord);
+
+  const validationCompleted = [
+    "REQUESTER_REVIEW",
+    "PEER_REVIEW",
+    "MANAGER_REVIEW",
+    "READY_FOR_PUBLISH",
+    "PUBLISHED",
+  ].includes(stage);
+
+  const authoringCompleted = validationCompleted;
+
+  const requesterCompleted = [
+    "PEER_REVIEW",
+    "MANAGER_REVIEW",
+    "READY_FOR_PUBLISH",
+    "PUBLISHED",
+  ].includes(stage);
+
+  const peerCompleted = [
+    "MANAGER_REVIEW",
+    "READY_FOR_PUBLISH",
+    "PUBLISHED",
+  ].includes(stage);
+
+  const managerCompleted = [
+    "READY_FOR_PUBLISH",
+    "PUBLISHED",
+  ].includes(stage);
+
+  const published = stage === "PUBLISHED";
+
+  const approvalComplete =
+    requesterCompleted &&
+    peerCompleted &&
+    managerCompleted;
+
+  let approvalStatus = "Pending";
+
+  if (
+    stage === "REQUESTER_REVIEW" ||
+    stage === "PEER_REVIEW" ||
+    stage === "MANAGER_REVIEW"
+  ) {
+    approvalStatus = "Processing";
+  }
+
+  if (approvalComplete) {
+    approvalStatus = "Completed";
+  }
+
+  return [
+    {
+      id: "validation",
+      number: 1,
+      title: "AI Validation",
+      status: validationCompleted
+        ? "Completed"
+        : "Processing",
+      progress: validationCompleted ? 100 : 45,
+      items: [
+        {
+          label: "Verifying input structure",
+          status: validationCompleted
+            ? "completed"
+            : "processing",
+        },
+        {
+          label: "Issue identification",
+          status: validationCompleted
+            ? "completed"
+            : "pending",
+        },
+      ],
+    },
+    {
+      id: "authoring",
+      number: 2,
+      title: "AEM Authoring",
+      status: authoringCompleted
+        ? "Completed"
+        : validationCompleted
+          ? "Processing"
+          : "Pending",
+      progress: authoringCompleted
+        ? 100
+        : validationCompleted
+          ? 50
+          : 0,
+      items: [
+        {
+          label: "Templated selection and usage",
+          status: authoringCompleted
+            ? "completed"
+            : "pending",
+        },
+        {
+          label: "Page path generation",
+          status: authoringCompleted
+            ? "completed"
+            : "pending",
+        },
+        {
+          label: "Preview Link",
+          status: authoringCompleted
+            ? "completed"
+            : "pending",
+        },
+        {
+          label: "Timestamp marking",
+          status: authoringCompleted
+            ? "completed"
+            : "pending",
+        },
+        {
+          label: "Issue identification",
+          status: authoringCompleted
+            ? "completed"
+            : "pending",
+        },
+      ],
+      notice:
+        apiResult?.workflow_result?.agent_2?.errors?.length > 0
+          ? `${apiResult.workflow_result.agent_2.errors.length} Errors: Resolve Failed Asset Mapping`
+          : null,
+    },
+    {
+      id: "approval",
+      number: 3,
+      title: "Approval",
+      status: approvalStatus,
+      progress: approvalComplete
+        ? 100
+        : stage === "MANAGER_REVIEW"
+          ? 70
+          : stage === "PEER_REVIEW"
+            ? 45
+            : stage === "REQUESTER_REVIEW"
+              ? 22
+              : 0,
+      items: [
+        {
+          label: "Approver 1: Requester Review",
+          status: requesterCompleted
+            ? "completed"
+            : stage === "REQUESTER_REVIEW"
+              ? "processing"
+              : "pending",
+        },
+        {
+          label: "Approver 2: Peer Review",
+          status: peerCompleted
+            ? "completed"
+            : stage === "PEER_REVIEW"
+              ? "processing"
+              : "pending",
+        },
+        {
+          label: "Approver 3: Manager Review",
+          status: managerCompleted
+            ? "completed"
+            : stage === "MANAGER_REVIEW"
+              ? "processing"
+              : "pending",
+        },
+        {
+          label: "Comments collected",
+          status: approvalComplete
+            ? "completed"
+            : "pending",
+        },
+      ],
+    },
+    {
+      id: "publish",
+      number: 5,
+      title: "Publish",
+      status: published
+        ? "Completed"
+        : managerCompleted
+          ? "Processing"
+          : "Pending",
+      progress: published
+        ? 100
+        : managerCompleted
+          ? 35
+          : 0,
+      items: [],
+    },
+  ];
+}
 
 function Processing() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const fileName =
-    location.state?.fileName || "press-release-document.docx";
+  const navigationResult =
+    location.state?.apiResult || null;
 
-  const jiraId = location.state?.jiraId || null;
+  const [apiResult, setApiResult] =
+    useState(navigationResult);
 
-  const [workflowSteps, setWorkflowSteps] =
-    useState(INITIAL_STEPS);
+  const [isLoading, setIsLoading] = useState(
+    !navigationResult,
+  );
 
-  const [activityMessages, setActivityMessages] = useState([
-    {
-      id: "request-received",
-      text: "Press release request received.",
-      time: new Date(),
-    },
-    {
-      id: "validation-started",
-      text: "AI Validation started.",
-      time: new Date(),
-    },
-  ]);
-
-  const [isWorkflowWaiting, setIsWorkflowWaiting] =
-    useState(false);
-
-  const addActivityMessage = useCallback((text) => {
-    setActivityMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        text,
-        time: new Date(),
-      },
-    ]);
-  }, []);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    const validationTimer = window.setTimeout(() => {
-      setWorkflowSteps((currentSteps) =>
-        currentSteps.map((step) => {
-          if (step.id === "validation") {
-            return {
-              ...step,
-              status: "completed",
-              description:
-                "Validation completed. Required fields, document structure, and compliance checks passed.",
-            };
-          }
-
-          if (step.id === "authoring") {
-            return {
-              ...step,
-              status: "processing",
-              description:
-                "The Author Agent is creating the press release draft and AEM page structure.",
-            };
-          }
-
-          return step;
-        }),
-      );
-
-      addActivityMessage(
-        "AI Validation completed successfully.",
-      );
-
-      addActivityMessage("AEM Authoring started.");
-    }, 3000);
-
-    const authoringTimer = window.setTimeout(() => {
-      setWorkflowSteps((currentSteps) =>
-        currentSteps.map((step) => {
-          if (step.id === "authoring") {
-            return {
-              ...step,
-              status: "completed",
-              description:
-                "The draft press release and AEM page structure were created successfully.",
-            };
-          }
-
-          if (step.id === "approval") {
-            return {
-              ...step,
-              status: "waiting",
-              description:
-                "The generated draft is ready and waiting for review by an authorized approver.",
-            };
-          }
-
-          return step;
-        }),
-      );
-
-      addActivityMessage("AEM Authoring completed.");
-
-      addActivityMessage(
-        "The request is waiting for human approval.",
-      );
-
-      setIsWorkflowWaiting(true);
-    }, 6500);
-
-    return () => {
-      window.clearTimeout(validationTimer);
-      window.clearTimeout(authoringTimer);
-    };
-  }, [addActivityMessage]);
-
-  const completedStepCount = useMemo(() => {
-    return workflowSteps.filter(
-      (step) => step.status === "completed",
-    ).length;
-  }, [workflowSteps]);
-
-  const processingStepCount = useMemo(() => {
-    return workflowSteps.filter(
-      (step) => step.status === "processing",
-    ).length;
-  }, [workflowSteps]);
-
-  const waitingStepCount = useMemo(() => {
-    return workflowSteps.filter(
-      (step) => step.status === "waiting",
-    ).length;
-  }, [workflowSteps]);
-
-  const activeStepIndex = useMemo(() => {
-    const processingIndex = workflowSteps.findIndex(
-      (step) => step.status === "processing",
-    );
-
-    if (processingIndex !== -1) {
-      return processingIndex;
+    if (navigationResult) {
+      return;
     }
 
-    const waitingIndex = workflowSteps.findIndex(
-      (step) => step.status === "waiting",
-    );
+    async function loadLatestRequest() {
+      try {
+        const result =
+          await getLatestPressReleaseRequest();
 
-    if (waitingIndex !== -1) {
-      return waitingIndex;
+        setApiResult(result);
+      } catch (error) {
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load the latest request.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    return 0;
-  }, [workflowSteps]);
+    loadLatestRequest();
+  }, [navigationResult]);
 
-  const progressPercent = useMemo(() => {
-    const progressValue = workflowSteps.reduce(
-      (total, step) => {
-        if (step.status === "completed") {
-          return total + 1;
-        }
+  const requestRecord = apiResult?.request || null;
 
-        if (
-          step.status === "processing" ||
-          step.status === "waiting"
-        ) {
-          return total + 0.5;
-        }
+  const sourceText =
+    apiResult?.source?.text ||
+    "The extracted source content is unavailable after refreshing this page.";
 
-        return total;
-      },
-      0,
-    );
+  const workflowSections = useMemo(
+    () =>
+      buildWorkflowSections(
+        requestRecord,
+        apiResult,
+      ),
+    [requestRecord, apiResult],
+  );
 
-    return Math.min(
-      100,
-      (progressValue / workflowSteps.length) * 100,
-    );
-  }, [workflowSteps]);
+  const draftUrl = buildBackendUrl(
+    apiResult?.draft_link,
+  );
 
-  const caseStatus = useMemo(() => {
-    if (isWorkflowWaiting) {
-      return {
-        label: "Waiting for Approval",
-        className: "waiting",
-      };
-    }
+  if (isLoading) {
+    return (
+      <main className="ux-processing-page ux-processing-page--centered">
+        <div className="ux-processing-loading">
+          <span className="ux-processing-spinner" />
 
-    return {
-      label: "In Progress",
-      className: "processing",
-    };
-  }, [isWorkflowWaiting]);
+          <h1>Loading Press Release</h1>
 
-  return (
-    <div className="app">
-      <Header />
-
-      <main className="processing-page">
-        <div className="processing-page__heading">
-          <button
-            type="button"
-            className="back-button"
-            onClick={() => navigate("/new")}
-          >
-            <span aria-hidden="true">←</span>
-            Back
-          </button>
-
-          <div className="processing-page__title-row">
-            <div>
-              <h1>Processing Press Release</h1>
-
-              <p>
-                Follow the validation, authoring, and approval
-                workflow for this request.
-              </p>
-            </div>
-
-            <div
-              className={`processing-page__case-status processing-page__case-status--${caseStatus.className}`}
-            >
-              <span>Case Status</span>
-              <strong>{caseStatus.label}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="processing-layout">
-          <section className="document-preview-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Source Document</h2>
-
-                <p>
-                  This panel will display content extracted from the
-                  uploaded document.
-                </p>
-              </div>
-
-              <span className="document-type-badge">
-                {jiraId ? "JIRA" : "DOCX"}
-              </span>
-            </div>
-
-            <div className="document-information">
-              <div className="document-information__icon">
-                {jiraId ? "J" : "W"}
-              </div>
-
-              <div>
-                <strong>
-                  {jiraId
-                    ? `Jira Request ${jiraId}`
-                    : fileName}
-                </strong>
-
-                {jiraId ? (
-                  <span>Content will be retrieved from Jira.</span>
-                ) : (
-                  <span>Uploaded source document</span>
-                )}
-              </div>
-            </div>
-
-            <div className="document-preview">
-              <div className="document-preview__page document-preview__page--placeholder">
-                <div className="source-preview-placeholder">
-                  <div
-                    className="source-preview-placeholder__icon"
-                    aria-hidden="true"
-                  >
-                    {jiraId ? "J" : "W"}
-                  </div>
-
-                  <h3>Source document received</h3>
-
-                  <p>
-                    {jiraId
-                      ? `The application received Jira ID ${jiraId}.`
-                      : `The application received ${fileName}.`}
-                  </p>
-
-                  <p>
-                    The real document text will appear here after the
-                    React frontend is connected to the Flask backend.
-                  </p>
-
-                  <div className="source-preview-placeholder__details">
-                    <span>
-                      <strong>Current mode:</strong> Simulated frontend
-                    </span>
-
-                    <span>
-                      <strong>Part 3:</strong> Flask document extraction
-                    </span>
-
-                    <span>
-                      <strong>Final preview:</strong> Generated AEM draft
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="document-preview-footer">
-              <span>
-                The uploaded file has not been sent to Flask yet.
-              </span>
-
-              <button
-                type="button"
-                onClick={() =>
-                  console.log("Open source document clicked")
-                }
-              >
-                Open Source
-              </button>
-            </div>
-          </section>
-
-          <aside className="processing-workflow-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Workflow Progress</h2>
-
-                <p>
-                  Follow the current status of each processing step.
-                </p>
-              </div>
-
-              <span className="workflow-progress-label">
-                Step {activeStepIndex + 1} of{" "}
-                {workflowSteps.length}
-              </span>
-            </div>
-
-            <div
-              className="workflow-progress-bar"
-              aria-label={`${Math.round(
-                progressPercent,
-              )}% workflow progress`}
-            >
-              <div
-                className="workflow-progress-bar__fill"
-                style={{
-                  width: `${progressPercent}%`,
-                }}
-              />
-            </div>
-
-            <div className="workflow-summary">
-              <span>
-                <strong>{completedStepCount}</strong>
-                completed
-              </span>
-
-              <span>
-                <strong>{processingStepCount}</strong>
-                processing
-              </span>
-
-              <span>
-                <strong>{waitingStepCount}</strong>
-                waiting
-              </span>
-            </div>
-
-            <WorkflowTimeline steps={workflowSteps} />
-
-            <div className="processing-activity">
-              <div className="processing-activity__heading">
-                <h3>Processing Activity</h3>
-
-                {!isWorkflowWaiting && (
-                  <span className="live-indicator">
-                    <span className="live-indicator__dot" />
-                    Live
-                  </span>
-                )}
-              </div>
-
-              <div className="processing-activity__list">
-                {activityMessages.map((message) => (
-                  <div
-                    className="processing-activity__item"
-                    key={message.id}
-                  >
-                    <span className="processing-activity__marker" />
-
-                    <div>
-                      <p>{message.text}</p>
-
-                      <time>
-                        {message.time.toLocaleTimeString([], {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                      </time>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="processing-note">
-              <strong>Human approval required</strong>
-
-              <p>
-                The Publish Agent will not run until an authorized
-                person approves the generated draft.
-              </p>
-            </div>
-
-            {isWorkflowWaiting && (
-              <div className="processing-actions">
-                <button
-                  type="button"
-                  className="return-dashboard-button"
-                  onClick={() => navigate("/")}
-                >
-                  Return to Dashboard
-                </button>
-              </div>
-            )}
-          </aside>
+          <p>
+            Retrieving workflow information from Flask.
+          </p>
         </div>
       </main>
-    </div>
+    );
+  }
+
+  if (loadError || !apiResult) {
+    return (
+      <main className="ux-processing-page ux-processing-page--centered">
+        <div className="ux-processing-error">
+          <h1>Unable to Load Request</h1>
+
+          <p>
+            {loadError || "No request was found."}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/new")}
+          >
+            Start New Request
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="ux-processing-page">
+      <section className="ux-processing-document-area">
+        <button
+          type="button"
+          className="ux-processing-back-link"
+          onClick={() => navigate("/")}
+        >
+          <span aria-hidden="true">←</span>
+          Back to Dashboard
+        </button>
+
+        <div className="ux-processing-document-frame">
+          <article className="ux-processing-document-page">
+            <div className="ux-processing-document-content">
+              {sourceText
+                .split("\n")
+                .filter((line) => line.trim())
+                .map((paragraph, index) => (
+                  <p
+                    key={`${index}-${paragraph.slice(0, 20)}`}
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+            </div>
+          </article>
+        </div>
+
+        {draftUrl && (
+          <div className="ux-processing-document-footer">
+            <span>
+              Request{" "}
+              {requestRecord?.request_id ||
+                "Unavailable"}
+            </span>
+
+            <a
+              href={draftUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open Preview Link
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        )}
+      </section>
+
+      <aside className="ux-processing-sidebar">
+        {workflowSections.map((section) => (
+          <WorkflowSection
+            key={section.id}
+            section={section}
+          />
+        ))}
+      </aside>
+    </main>
+  );
+}
+
+function WorkflowSection({ section }) {
+  const normalizedStatus =
+    section.status.toLowerCase();
+
+  return (
+    <section
+      className={`ux-processing-workflow-section ux-processing-workflow-section--${normalizedStatus}`}
+    >
+      <div className="ux-processing-workflow-heading">
+        <div className="ux-processing-workflow-title">
+          <StatusIcon status={normalizedStatus} />
+
+          <strong>
+            Step {section.number} {section.title}
+          </strong>
+        </div>
+
+        <span
+          className={`ux-processing-workflow-status ux-processing-workflow-status--${normalizedStatus}`}
+        >
+          {section.status}
+        </span>
+      </div>
+
+      {section.items.length > 0 && (
+        <div className="ux-processing-substeps">
+          {section.items.map((item) => (
+            <div
+              className="ux-processing-substep"
+              key={item.label}
+            >
+              <SubstepIcon status={item.status} />
+
+              <p>{item.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {section.notice && (
+        <div className="ux-processing-warning">
+          {section.notice}
+        </div>
+      )}
+
+      <div className="ux-processing-progress-track">
+        <div
+          className={`ux-processing-progress-fill ux-processing-progress-fill--${normalizedStatus}`}
+          style={{
+            width: `${section.progress}%`,
+          }}
+        />
+      </div>
+    </section>
+  );
+}
+
+function StatusIcon({ status }) {
+  if (status === "completed") {
+    return (
+      <span className="ux-processing-status-icon ux-processing-status-icon--completed">
+        ✓
+      </span>
+    );
+  }
+
+  if (status === "processing") {
+    return (
+      <span className="ux-processing-status-icon ux-processing-status-icon--processing">
+        ◷
+      </span>
+    );
+  }
+
+  return (
+    <span className="ux-processing-status-icon ux-processing-status-icon--pending">
+      ◷
+    </span>
+  );
+}
+
+function SubstepIcon({ status }) {
+  if (status === "completed") {
+    return (
+      <span className="ux-processing-substep-icon ux-processing-substep-icon--completed">
+        ✓
+      </span>
+    );
+  }
+
+  if (status === "processing") {
+    return (
+      <span className="ux-processing-substep-icon ux-processing-substep-icon--processing">
+        ◷
+      </span>
+    );
+  }
+
+  return (
+    <span className="ux-processing-substep-icon ux-processing-substep-icon--pending">
+      ◷
+    </span>
   );
 }
 

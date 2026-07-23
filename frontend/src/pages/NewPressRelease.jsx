@@ -1,226 +1,319 @@
-import { useState } from "react";
-import {useNavigate} from "react-router";
-import Header from "../components/Header";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { createPressReleaseRequest } from "../api/pressReleaseApi";
+
+const WORKFLOW_STEPS = [
+  {
+    id: "validation",
+    number: 1,
+    title: "AI Validation",
+    items: [
+      "Verifying input structure",
+      "Issue identification",
+    ],
+  },
+  {
+    id: "authoring",
+    number: 2,
+    title: "AEM Authoring",
+    items: [
+      "Template selection and usage",
+      "Page path generation",
+      "Preview link",
+      "Timestamp marking",
+      "Issue identification",
+    ],
+  },
+  {
+    id: "approval",
+    number: 3,
+    title: "Approval",
+    items: [
+      "Approver 1: Susan Jennings",
+      "Approver 2: Karl Korn",
+      "Comments collected",
+    ],
+  },
+  {
+    id: "publish",
+    number: 5,
+    title: "Publish",
+    items: [],
+  },
+];
 
 function NewPressRelease() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
-    const [selectedFile, setSelectedFile] = useState(null);
-    const[jiraId, setJireId] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [jiraId, setJiraId] = useState("");
+  const [showJiraInput, setShowJiraInput] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-    function handleFileChange(event){
-        const file = event.target.files?.[0];
-
-        setErrorMessage("");
-
-        if(!file){
-            setSelectedFile(null);
-            return;
-        }
-
-        const isWordDocument = 
-            file.name.toLowerCase().endsWith(".docx") ||
-            file.name.toLowerCase().endsWith(".doc");
-        
-        if(!isWordDocument){
-            setSelectedFile(null);
-            setErrorMessage("Please upload a word document.");
-
-            event.target.value = "";
-            return;
-        }
-
-        setSelectedFile(file);
+  function handleUploadButtonClick() {
+    if (isSubmitting) {
+      return;
     }
 
-    function handleRemoveFile(){
-        setSelectedFile(null);
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChange(event) {
+    const file = event.target.files?.[0];
+
+    setErrorMessage("");
+
+    if (!file) {
+      return;
     }
 
-    function handleStartProcessing(){
-        setErrorMessage("");
+    if (!file.name.toLowerCase().endsWith(".docx")) {
+      setErrorMessage(
+        "Please select a valid .docx Word document.",
+      );
 
-        if(!selectedFile && jireId.trim() === ""){
-            setErrorMessage("Upload a Word document or enter a Jira ID before continuing.",);
-            return;
-        }
-        navigate("/processing", {
-            state:{
-                fileName:selectedFile?.name || null,
-                jiraId: jiraId.trim() || null,
-            },
-        });
+      event.target.value = "";
+      return;
     }
 
-    return (
-        <div className="app">
-            <Header />
+    setSelectedFile(file);
 
-            <main className="new-release-page">
-                <div className = "new-release-heading">
-                    <button 
-                        type = "button"
-                        className = "back-button"
-                        onClick = {() => navigate("/")}
-                    >
-                        <span aria-hidden = "true">←</span>
-                        Back to Dashboard
-                    </button>
-                    <h1>Start New Press Release</h1>
-                    <p> Upload a press release content document or enter its Jira ID to begin validation and authoring.</p>
+    await submitRequest({
+      file,
+      prompt: "",
+    });
+  }
+
+  function handleJiraButtonClick() {
+    if (isSubmitting) {
+      return;
+    }
+
+    setErrorMessage("");
+    setShowJiraInput(true);
+  }
+
+  async function handleJiraSubmit(event) {
+    event.preventDefault();
+
+    const cleanedJiraId = jiraId.trim();
+
+    if (!cleanedJiraId) {
+      setErrorMessage("Enter a Jira ID before continuing.");
+      return;
+    }
+
+    await submitRequest({
+      file: null,
+      prompt: `Create a press release for Jira request ${cleanedJiraId}.`,
+    });
+  }
+
+  async function submitRequest({ file, prompt }) {
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const apiResult = await createPressReleaseRequest({
+        file,
+        prompt,
+      });
+
+      navigate("/processing", {
+        state: {
+          apiResult,
+        },
+      });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to process the press release request.",
+      );
+
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="ux-upload-page">
+      <section className="ux-upload-main">
+        <button
+          type="button"
+          className="ux-back-link"
+          onClick={() => navigate("/")}
+          disabled={isSubmitting}
+        >
+          <span aria-hidden="true">←</span>
+          Back to Dashboard
+        </button>
+
+        <div className="ux-document-frame">
+          <div className="ux-upload-center">
+            {!isSubmitting && !showJiraInput && (
+              <>
+                <h1>Add Press Release Document</h1>
+
+                <p>Accepted files are pdf, docx.</p>
+
+                <div className="ux-upload-divider" />
+
+                <div className="ux-upload-buttons">
+                  <button
+                    type="button"
+                    className="ux-primary-button"
+                    onClick={handleUploadButtonClick}
+                  >
+                    Upload Document
+                    <span aria-hidden="true">↥</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="ux-primary-button"
+                    onClick={handleJiraButtonClick}
+                  >
+                    Enter JIRA ID
+                    <span aria-hidden="true">⊙</span>
+                  </button>
                 </div>
 
-                <div className="new-release-layout">
-                    <section className="release-input-panel">
-                        <h2>Press Release Content</h2>
-                        <p className="panel-description">Select one of the following methods to provide the press release.</p>
-                        <div className = "upload-area">
-                            <div className="upload-icon" aria-hidden = "true">↑</div>
-                            <h3>Upload Word Document</h3>
-                            <p>Drag and drop a file here, or select a file from your computer.</p>
+                <input
+                  ref={fileInputRef}
+                  className="ux-hidden-file-input"
+                  type="file"
+                  accept=".docx"
+                  onChange={handleFileChange}
+                />
+              </>
+            )}
 
-                            <label className="choose-file-button">
-                                Choose File
+            {showJiraInput && !isSubmitting && (
+              <form
+                className="ux-jira-form"
+                onSubmit={handleJiraSubmit}
+              >
+                <h1>Enter JIRA ID</h1>
 
-                                <input 
-                                    type="file"
-                                    accept = ".doc,.docx"
-                                    onChange={handleFileChange}
-                                />
-                            </label>
+                <p>
+                  Enter the Jira issue associated with the press
+                  release.
+                </p>
 
-                            <span className="file-requirement">
-                                Accepted formates: .doc and .docx
-                            </span>
-                        </div>
+                <input
+                  type="text"
+                  value={jiraId}
+                  onChange={(event) =>
+                    setJiraId(event.target.value)
+                  }
+                  placeholder="Example: PR-2026-104"
+                  autoFocus
+                />
 
-                        {selectedFile && (
-                            <div className = "selected-file">
-                                <div className = "selected-file__information">
-                                    <span className = "selected-file__icon" aria-hidden = "true"> W </span>
+                <div className="ux-jira-actions">
+                  <button
+                    type="button"
+                    className="ux-secondary-button"
+                    onClick={() => {
+                      setShowJiraInput(false);
+                      setJiraId("");
+                      setErrorMessage("");
+                    }}
+                  >
+                    Cancel
+                  </button>
 
-                                    <div>
-                                        <strong>{selectedFile.name}</strong>
-
-                                        <span>
-                                            {(selectedFile.size / 1024).toFixed(1)} KB
-                                        </span>
-                                    </div>
-                                </div>
-                                <button 
-                                    type = "button"
-                                    className = "remove-file-button"
-                                    onClick = {handleRemoveFile}
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        )}
-
-                        <div className = "method-divider">
-                            <span>OR</span>
-                        </div>
-
-                        <div className = "jira-section">
-                            <label htmlFor = "jira-id">Enter Jira ID</label>
-
-                            <input 
-                                id="jira-id"
-                                type = "text"
-                                value = {jiraId}
-                                onChange={(event) => setJiraId(event.target.value)}
-                                placeholder = "Example: PR-2026-104"
-                            />
-                            <p> Enter the Jira issue containing the press release information.</p>
-                        </div>
-
-                        {errorMessage && (
-                            <div className = "form-error" role="alert">
-                                {errorMessage}
-                            </div>
-                        )}
-
-                        <div className = "release-actions">
-                            <button 
-                                type="button"
-                                className="cancel-button"
-                                onClick={() => navigate("/")}
-                            >
-                                Cancel
-                            </button>
-
-                            <button 
-                                type="button"
-                                className = "process-button"
-                                onClick = {handleStartProcessing}
-                            >
-                                Start Processing
-                                <span aria-hidden = "true">→</span>
-                            </button>
-                        </div>
-                    </section>
-
-                    <aside className="workflow-panel">
-                        <div className="workflow-panel__heading">
-                            <h2>Workflow</h2>
-
-                            <span>All steps pending</span>
-                        </div>
-
-                        <div className = "workflow-list">
-                            <WorkflowStep 
-                                number="1"
-                                title="AI Validation"
-                                description = "Validate content, required fields, and compliance."
-                            />
-                            <WorkflowStep
-                                number="2"
-                                title = "AEM Authoring"
-                                description="Create the draft press release page and assets."
-                            />
-                            <WorkflowStep 
-                                number="3"
-                                title="Approval"
-                                description = "Wait for review and approval from the authorized person."
-                            />
-                            <WorkflowStep
-                                number="4"
-                                title = "Publish"
-                                description = "Publish the approved press release in AEM."
-                                isLast
-                            />
-                        </div>
-
-                    </aside>
+                  <button
+                    type="submit"
+                    className="ux-primary-button"
+                  >
+                    Continue
+                    <span aria-hidden="true">→</span>
+                  </button>
                 </div>
-            </main>
+              </form>
+            )}
+
+            {isSubmitting && (
+              <div
+                className="ux-processing-state"
+                role="status"
+              >
+                <span className="ux-processing-spinner" />
+
+                <h1>Processing Press Release</h1>
+
+                <p>
+                  {selectedFile
+                    ? `Uploading ${selectedFile.name} and running the agent workflow.`
+                    : "Retrieving the Jira request and running the agent workflow."}
+                </p>
+
+                <span className="ux-processing-note">
+                  This may take a moment.
+                </span>
+              </div>
+            )}
+
+            {errorMessage && !isSubmitting && (
+              <div className="ux-upload-error" role="alert">
+                {errorMessage}
+              </div>
+            )}
+          </div>
         </div>
-    );
+      </section>
+
+      <aside className="ux-workflow-sidebar">
+        {WORKFLOW_STEPS.map((step) => (
+          <WorkflowSection
+            key={step.id}
+            step={step}
+          />
+        ))}
+      </aside>
+    </main>
+  );
 }
 
-function WorkflowStep({
-    number,
-    title, 
-    description,
-    isLast = false,
-}) {
-    return (
-        <div className="workflow-step">
-            <div className = "workflow-step__marker-column">
-                <div className = "workflow-step__number">{number}</div>
+function WorkflowSection({ step }) {
+  return (
+    <section className="ux-workflow-section">
+      <div className="ux-workflow-heading">
+        <div className="ux-workflow-title">
+          <span className="ux-pending-icon">
+            ◷
+          </span>
 
-                {!isLast && <div className = "workflow-step__line"/>}
-            </div>
-            <div className = "workflow-step__content">
-                <div className = "workflow-step__title-row">
-                    <h3>{title}</h3>
-                    <span className = "workflow-status workflow-status--pending"> Pending </span>
-                </div>
-                <p>{description}</p>
-            </div>
+          <strong>
+            Step {step.number} {step.title}
+          </strong>
         </div>
-    );
+
+        <span className="ux-workflow-status">
+          Pending
+        </span>
+      </div>
+
+      {step.items.length > 0 && (
+        <div className="ux-workflow-substeps">
+          {step.items.map((item) => (
+            <div
+              className="ux-workflow-substep"
+              key={item}
+            >
+              <span aria-hidden="true">◷</span>
+              <p>{item}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="ux-workflow-line" />
+    </section>
+  );
 }
 
 export default NewPressRelease;
